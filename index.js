@@ -6,25 +6,14 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
-// === Most Reliable CORS Setup for Railway + Vercel ===
-const corsOptions = {
-  origin: '*',                    // Allow all (including your Vercel site)
+// Reliable CORS setup (no wildcard route that crashes Express 5)
+app.use(cors({
+  origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   maxAge: 86400
-};
-
-app.use(cors(corsOptions));
-
-// Extra safety: manually handle preflight for all routes
-app.options('*', (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  res.status(204).end();
-});
+}));
 
 app.use(express.json());
 
