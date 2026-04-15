@@ -6,9 +6,13 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
-// Reliable CORS setup (no wildcard route that crashes Express 5)
+// === CORS - Only your Vercel site + localhost (safer and cleaner) ===
 app.use(cors({
-  origin: '*',
+  origin: [
+    'https://login-aol.vercel.app',     // Your deployed frontend
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ],
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -101,5 +105,5 @@ const port = process.env.PORT || 8080;
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${port}`);
-  console.log("✅ CORS enabled with origin: *");
+  console.log("✅ CORS allowed only for: login-aol.vercel.app + localhost");
 });
