@@ -8,16 +8,21 @@ const app = express();
 const port = 3000;
 
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    '*',
-    'http://127.0.0.1:3000',
-    'https://demascus-production.up.railway.app'  // if you deploy frontend later
-  ],
+  origin: '*',                    // Temporarily allow all (including your Vercel site)
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  maxAge: 86400                   // Cache preflight for 24 hours
 }));
+
+// Explicit preflight handler - this fixes most Railway CORS issues
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Max-Age', '86400');
+  res.status(204).end();
+});
 
 
 
