@@ -134,7 +134,7 @@ app.get("/", (req, res) => {
   res.status(200).send("API is running and healthy!");
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log("✅ IP capturing enabled (trust proxy = true)");
 });
