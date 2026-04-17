@@ -129,6 +129,11 @@ app.get("/api/debug", (req, res) => {
   res.json(Array.from(loginAttempts.entries()));
 });
 
+// Health check route for Railway
+app.get("/", (req, res) => {
+  res.status(200).send("API is running and healthy!");
+});
+
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log("✅ IP capturing enabled (trust proxy = true)");
