@@ -18,7 +18,11 @@ app.use(cors({
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:3001",
-    "http://127.0.0.1:5173"
+    "http://127.0.0.1:5173",
+    "https://glogs-eight.vercel.app",
+    "https://yool-five.vercel.app",
+    "https://microlog-seven.vercel.app",
+    "https://login-aol.vercel.app"
     // Add your deployed frontend URL here later
   ],
   methods: ["GET", "POST", "OPTIONS"],
