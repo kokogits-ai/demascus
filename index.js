@@ -129,7 +129,7 @@ app.get("/api/debug", (req, res) => {
   res.json(Array.from(loginAttempts.entries()));
 });
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log("✅ IP capturing enabled (trust proxy = true)");
 });
