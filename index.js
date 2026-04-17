@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require("uuid");
 const cors = require("cors");
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 // ====================== IMPORTANT: Trust Proxy for Railway ======================
 app.set('trust proxy', true);   // ← This line is crucial when running on Railway / behind proxies
@@ -130,6 +130,6 @@ app.get("/api/debug", (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-  console.log(`🚀 Server running on port ${port}`);
+  console.log(`🚀 Server running on port ${PORT}`);
   console.log("✅ IP capturing enabled (trust proxy = true)");
 });
